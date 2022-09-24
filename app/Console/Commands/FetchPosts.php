@@ -44,8 +44,8 @@ class FetchPosts extends Command
      */
     public function handle(): array
     {
-        $client = new Client(HttpClient::create(['timeout' => env('FETCH_TIMEOUT') ?? 10]));
-        $crawler = $client->request('GET', env('TARGET_URL') ?? 'https://news.ycombinator.com/');
+        $client = new Client(HttpClient::create(['timeout' => env('FETCH_TIMEOUT', 10)]));
+        $crawler = $client->request('GET', env('TARGET_URL','https://news.ycombinator.com/'));
         $crawler = $crawler->filter('.itemlist > tr');
         if (!$crawler->count()) {
             throw new RuntimeException('filtered NodeList is empty, possibly HN html structure has changed or TARGET_URL is invalid');
