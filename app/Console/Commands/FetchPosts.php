@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Post;
+use Carbon\Carbon;
 use Goutte\Client;
 use Illuminate\Console\Command;
 use RuntimeException;
@@ -42,7 +44,7 @@ class FetchPosts extends Command
      */
     public function handle(): array
     {
-        $client = new Client(HttpClient::create(['timeout' => 10]));
+        $client = new Client(HttpClient::create(['timeout' => env('FETCH_TIMEOUT') ?? 10]));
         $crawler = $client->request('GET', env('TARGET_URL') ?? 'https://news.ycombinator.com/');
         $crawler = $crawler->filter('.itemlist > tr');
         if (!$crawler->count()) {
@@ -72,9 +74,9 @@ class FetchPosts extends Command
                     if ($scoreNode->count()) {
                         return [
                             'id' => (int)substr($scoreNode->attr('id'), 6),
-                            'score' => (int)substr($scoreNode->innerText(), 0, -7),
-                            'postedBy' => $node->filter('.hnuser')->first()->innerText(),
-                            'createdAt' => $node->filter('.age')->first()->attr('title')
+                            'points' => (int)substr($scoreNode->innerText(), 0, -7),
+                            'author' => $node->filter('.hnuser')->first()->innerText(),
+                            'created_at' => $node->filter('.age')->first()->attr('title')
                         ];
                     }
                     return null;
@@ -93,7 +95,23 @@ class FetchPosts extends Command
             }
         }
 
-        dump($keyedPosts);
+        // persist data
+        array_map(function ($postData) {
+            $createdAt = Carbon::parse($postData['created_at']);
+            Post::updateOrCreate(
+                ['id' => $postData['id']],
+                [
+                    'title' => $postData['title'],
+                    'author' => $postData['author'],
+                    'points' => $postData['points'],
+                    'link' => $postData['link'],
+                    'created_at' => $createdAt,
+                    'updated_at' => Carbon::now(),
+                ]
+            );
+        }, $keyedPosts);
+
+        dump(Post::all()->toArray());
         return $keyedPosts;
     }
 }
