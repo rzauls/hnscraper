@@ -49,9 +49,9 @@ class FetchPosts extends Command
     public function handle(): void
     {
         $hn = new FetchController();
-        switch (env("HN_DATA_SOURCE", "html")) {
+        $source = env("HN_DATA_SOURCE", "html");
+        switch ($source) {
             case 'api':
-                // TODO: implement api fetcher
                 $client = new APIFetcher();
                 break;
             default:
@@ -73,6 +73,6 @@ class FetchPosts extends Command
         }
         );
 
-        Log::info("successfully imported {$posts->count()} data points");
+        Log::info("successfully imported {$posts->count()} data points from '{$source}' data source");
     }
 }
