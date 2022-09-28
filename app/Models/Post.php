@@ -17,5 +17,6 @@ class Post extends Model
 
     protected $guarded = []; // all fields are mass-writable
     public $timestamps = false; // we manage timestamps manually
+    protected $primaryKey = 'id';
 
 }

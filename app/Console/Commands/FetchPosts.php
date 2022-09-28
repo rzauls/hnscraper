@@ -2,10 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\HN\APIFetcher;
+use App\HN\HTMLFetcher;
+use App\Http\Controllers\FetchController;
 use App\Models\Post;
 use Carbon\Carbon;
 use Goutte\Client;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpClient\HttpClient;
@@ -42,81 +46,33 @@ class FetchPosts extends Command
      * @throws RuntimeException // in case the HN structure has changed or the parsed an item list is empty
      * @return array
      */
-    public function handle(): array
+    public function handle(): void
     {
-        $client = new Client(HttpClient::create(['timeout' => env('FETCH_TIMEOUT', 10)]));
-        $crawler = $client->request('GET', env('TARGET_URL', 'https://news.ycombinator.com/'));
-        $crawler = $crawler->filter('.itemlist > tr');
-        if (!$crawler->count()) {
-            throw new RuntimeException('filtered NodeList is empty, possibly HN html structure has changed or TARGET_URL is invalid');
-        }
-        $tableRows = $crawler->each(function (Crawler $node) {
-            switch ($node) {
-                case ($node->matches('.spacer') || $node->matches('.morespace')):
-                    // ignore spacers, since they don't contain any relevant data
-                    return null;
-                case($node->matches('.athing') && $node->attr('id')):
-                    // ignore AD posts (they don't have vote buttons)
-                    if (!$node->filter('.votelinks')->count()) {
-                        return null;
-                    }
-                    // parse title row
-                    $id = (int)$node->attr('id');
-                    $titleNode = $node->filter('.title');
-
-                    $titleLink = $titleNode->filter('.titleline')->first();
-                    if ($titleLink->count()) {
-                        return [
-                            'id' => $id,
-                            'title' => $titleLink->innerText(),
-                            'link' => $titleLink->filter('a')->first()->attr('href'),
-                        ];
-                    }
-                default:
-                    // parse subtitle row
-                    $scoreNode = $node->filter('.score')->first();
-                    if ($scoreNode->count()) {
-                        return [
-                            'id' => (int)substr($scoreNode->attr('id'), 6),
-                            'points' => (int)substr($scoreNode->innerText(), 0, -7),
-                            'author' => $node->filter('.hnuser')->first()->innerText(),
-                            'created_at' => $node->filter('.age')->first()->attr('title')
-                        ];
-                    }
-                    return null;
-
-            }
-        });
-
-        // remap and merge rows by post ID
-        $keyedPosts = [];
-        foreach ($tableRows as $row) {
-            // ignore null rows, since those are spacers and other garbage
-            if ($row) {
-                foreach ($row as $k => $v) {
-                    $keyedPosts[$row['id']][$k] = $v;
-                }
-            }
+        $hn = new FetchController();
+        switch (env("HN_DATA_SOURCE", "html")) {
+            case 'api':
+                // TODO: implement api fetcher
+                $client = new APIFetcher();
+                break;
+            default:
+                $client = new HTMLFetcher();
         }
 
-        // persist data
-        // TODO: generate models first, and batch the DB writes
-        array_map(function ($postData) {
-            $createdAt = Carbon::parse($postData['created_at']);
-            Post::updateOrCreate(
-                ['id' => $postData['id']],
-                [
-                    'title' => $postData['title'],
-                    'author' => $postData['author'],
-                    'points' => $postData['points'],
-                    'link' => $postData['link'],
-                    'created_at' => $createdAt,
-                    'updated_at' => Carbon::now(),
-                ]
-            );
-        }, $keyedPosts);
+        $posts = $hn->GetPosts($client);
 
-        dump(Post::all()->toArray());
-        return $keyedPosts;
+        $posts->each(function (Post $p) {
+            // TODO: check if post already imported and do not update if its soft-deleted
+            $p->updateorCreate(['id' => $p->id], [
+                'title' => $p->title,
+                'author' => $p->author,
+                'points' => $p->points,
+                'link' => $p->link,
+                'created_at' => $p->created_at,
+                'updated_at' => $p->updated_at,
+            ]);
+        }
+        );
+
+        Log::info("successfully imported {$posts->count()} data points");
     }
 }

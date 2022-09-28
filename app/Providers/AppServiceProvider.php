@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Interfaces\HNClient;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,7 +14,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $default = config('hn.default');
+        $hnClient = config("hn.{$default}.class");
+
+        $this->app->bind(HNClient::class, $hnClient);
     }
 
     /**
