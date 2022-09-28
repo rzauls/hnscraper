@@ -5327,27 +5327,57 @@ var dt = __webpack_require__(/*! datatables.net */ "./node_modules/datatables.ne
     var _this = this;
 
     this.posts.forEach(function (p) {
-      _this.postArray.push([p.title, p.points, p.author, p.link, p.created_at, p.updated_at, "foo"]);
+      _this.postArray.push({
+        title: p.title,
+        points: p.points,
+        author: p.author,
+        link: p.link,
+        created_at: p.created_at,
+        updated_at: p.updated_at,
+        id: p.id
+      });
     });
     this.table = new dt('#data-table', {
       data: this.postArray,
       columns: [{
-        title: 'Title'
+        title: 'Title',
+        data: 'title',
+        render: function render(data, type, row) {
+          // render a clickable title for the post
+          if (type === 'display') {
+            return "<a href=\"" + row.link + "\">" + data + "</a>";
+          }
+
+          return data;
+        }
       }, {
-        title: 'Score'
+        title: 'Score',
+        data: 'points'
       }, {
-        title: 'Author'
+        title: 'Author',
+        data: 'author'
       }, {
-        title: 'Link'
+        title: 'Created At',
+        data: 'created_at',
+        render: dt.render.datetime()
       }, {
-        title: 'Created At'
+        title: 'Last Updated',
+        data: 'updated_at',
+        render: dt.render.datetime()
       }, {
-        title: 'Last Updated'
-      }, {
-        title: 'Buttons'
+        title: 'Actions',
+        data: 'id',
+        render: function render(data, type, row) {
+          // render a clickable delete button
+          if (type === 'display') {
+            // TODO: post a delete with confirmation on click
+            return "<a href=\"/delete/" + data + "\">Delete</a>";
+          }
+
+          return data;
+        }
       }]
     });
-    console.log(this.posts);
   }
 });
 
@@ -5377,7 +5407,7 @@ var staticRenderFns = [function () {
       _c = _vm._self._c;
 
   return _c("div", {
-    staticClass: "card mt-2"
+    staticClass: "card p-2"
   }, [_c("table", {
     attrs: {
       id: "data-table"

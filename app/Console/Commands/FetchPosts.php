@@ -45,7 +45,7 @@ class FetchPosts extends Command
     public function handle(): array
     {
         $client = new Client(HttpClient::create(['timeout' => env('FETCH_TIMEOUT', 10)]));
-        $crawler = $client->request('GET', env('TARGET_URL','https://news.ycombinator.com/'));
+        $crawler = $client->request('GET', env('TARGET_URL', 'https://news.ycombinator.com/'));
         $crawler = $crawler->filter('.itemlist > tr');
         if (!$crawler->count()) {
             throw new RuntimeException('filtered NodeList is empty, possibly HN html structure has changed or TARGET_URL is invalid');
@@ -63,11 +63,15 @@ class FetchPosts extends Command
                     // parse title row
                     $id = (int)$node->attr('id');
                     $titleNode = $node->filter('.title');
-                    return [
-                        'id' => $id,
-                        'title' => $titleNode->filter('.titlelink')->first()->innerText(),
-                        'link' => $titleNode->filter('.titlelink')->first()->attr('href'),
-                    ];
+
+                    $titleLink = $titleNode->filter('.titleline')->first();
+                    if ($titleLink->count()) {
+                        return [
+                            'id' => $id,
+                            'title' => $titleLink->innerText(),
+                            'link' => $titleLink->filter('a')->first()->attr('href'),
+                        ];
+                    }
                 default:
                     // parse subtitle row
                     $scoreNode = $node->filter('.score')->first();
@@ -96,6 +100,7 @@ class FetchPosts extends Command
         }
 
         // persist data
+        // TODO: generate models first, and batch the DB writes
         array_map(function ($postData) {
             $createdAt = Carbon::parse($postData['created_at']);
             Post::updateOrCreate(
