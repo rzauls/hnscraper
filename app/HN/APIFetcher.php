@@ -6,10 +6,13 @@ use App\Interfaces\HNClient;
 use App\Models\Post;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpClient\HttpClient;
-use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 
+/*
+ * APIFetcher is a firebase API based implementation for HNClient interface
+ */
 class APIFetcher implements HNClient
 {
     public function fetch(): Collection
@@ -22,8 +25,10 @@ class APIFetcher implements HNClient
         $col = new Collection();
         $res = $client->request('GET', $baseURL . 'topstories.json');
         $idList = json_decode($res->getContent());
+        Log::debug("retrieved id list for topstories.json");
         // fetch only first 30 entries (equivalent of fetching the first html page);
         foreach (array_slice($idList, 0, 30) as $id) {
+            Log::debug("fetching json data for {$id}");
             $res = json_decode($client->request('GET', $baseURL . 'item/' . $id . '.json')->getContent());
             if ($res->type !== 'story') {
                 // skip non-story rows (job advertisements)

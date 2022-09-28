@@ -7,11 +7,12 @@ use App\Models\Post;
 use Carbon\Carbon;
 use Goutte\Client;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpClient\HttpClient;
 
 /*
- * HTMLFetcher is the html-scraper implementation for fetching HN data
+ * HTMLFetcher is the html-scraper implementation for HNClient interface
  */
 
 class HTMLFetcher implements HNClient
@@ -20,6 +21,7 @@ class HTMLFetcher implements HNClient
     {
         $client = new Client(HttpClient::create(['timeout' => env('FETCH_TIMEOUT', 10)]));
         $crawler = $client->request('GET', env('TARGET_URL', 'https://news.ycombinator.com/'));
+        Log::debug("retrieved frontpage html data");
         $crawler = $crawler->filter('.itemlist > tr');
         if (!$crawler->count()) {
             throw new \RuntimeException('filtered NodeList is empty, possibly HN html structure has changed or TARGET_URL is invalid');
@@ -36,6 +38,7 @@ class HTMLFetcher implements HNClient
                     }
                     // parse title row
                     $id = (int)$node->attr('id');
+                    Log::debug("parsing title row for {$id}");
                     $titleNode = $node->filter('.title');
 
                     $titleLink = $titleNode->filter('.titleline')->first();
@@ -46,12 +49,15 @@ class HTMLFetcher implements HNClient
                             'link' => $titleLink->filter('a')->first()->attr('href'),
                         ];
                     }
+                    break;
                 default:
                     // parse subtitle row
                     $scoreNode = $node->filter('.score')->first();
                     if ($scoreNode->count()) {
+                        $id = (int)substr($scoreNode->attr('id'), 6);
+                        Log::debug("parsing subtitle row for {$id}");
                         return [
-                            'id' => (int)substr($scoreNode->attr('id'), 6),
+                            'id' => $id,
                             'points' => (int)substr($scoreNode->innerText(), 0, -7),
                             'author' => $node->filter('.hnuser')->first()->innerText(),
                             'created_at' => $node->filter('.age')->first()->attr('title')
