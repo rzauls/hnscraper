@@ -33,6 +33,9 @@ export default {
         })
         this.table = new dt('#data-table', {
             data: this.postArray,
+            language: {
+                emptyTable: "No entries have been fetched, try running `artisan fetch:posts` command in your console"
+            },
             columns: [
                 {
                     title: 'Title',
@@ -53,13 +56,18 @@ export default {
                     title: 'Actions',
                     data: 'id',
                     render: function (data, type, row) {
-                        // render a clickable delete button
+                        // im pretty sure there is a better way to delete a specific item, however let's keep it simple
                         if (type === 'display') {
-                            // TODO: post a delete with confirmation on click
-                            return `<a href="/delete/` + data + `">Delete</a>`
+                            return `
+                                <form id="delete-` + data + `" action="/posts/` + data + `" method="POST" style="display: none;">
+                                    <input type="hidden" name="_token" value="` + document.querySelector('meta[name="csrf-token"]').getAttribute('content') + `">
+                                    <input type="hidden" name="_method" value="delete">
+                                </form>
+                                <button class="delete-item-button" form="delete-` + data + `">Delete</button>
+                            `
                         }
                         return data
-                    }
+                    },
                 },
             ]
         });

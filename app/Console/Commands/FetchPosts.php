@@ -61,18 +61,26 @@ class FetchPosts extends Command
         $posts = $hn->GetPosts($client);
 
         $posts->each(function (Post $p) {
-            // TODO: check if post already imported and do not update if its soft-deleted
-            $p->updateorCreate(['id' => $p->id], [
-                'title' => $p->title,
-                'author' => $p->author,
-                'points' => $p->points,
-                'link' => $p->link,
-                'created_at' => $p->created_at,
-                'updated_at' => $p->updated_at,
-            ]);
+            $postRecord = Post::withTrashed()->where('id', '=', $p->id)->first();
+            if ($postRecord !== null) {
+                // only update if not soft-deleted
+                if (!$postRecord->trashed()) {
+                    $postRecord->title = $p->title;
+                    $postRecord->author = $p->author;
+                    $postRecord->points = $p->points;
+                    $postRecord->link = $p->link;
+                    $postRecord->save();
+                } else {
+                    $this->info("skipping a trashed post with id " . $p->id);
+                }
+            } else {
+                $p->save();
+            }
         }
         );
 
-        Log::info("successfully imported {$posts->count()} data points from '{$source}' data source");
+        $successMsg = "successfully imported {$posts->count()} data points from '{$source}' data source";
+        Log::info($successMsg);
+        $this->info($successMsg);
     }
 }

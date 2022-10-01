@@ -43,10 +43,16 @@ class HTMLFetcher implements HNClient
 
                     $titleLink = $titleNode->filter('.titleline')->first();
                     if ($titleLink->count()) {
+
+                        $link = $titleLink->filter('a')->first()->attr('href');
+                        if (str_starts_with($link, 'item')) {
+                            // if link is a relative link to a text post, generate full link to the post
+                            $link = env('TARGET_URL', 'https://news.ycombinator.com/') . "/item?id={$id}";
+                        }
                         return [
                             'id' => $id,
                             'title' => $titleLink->innerText(),
-                            'link' => $titleLink->filter('a')->first()->attr('href'),
+                            'link' => $link,
                         ];
                     }
                     break;

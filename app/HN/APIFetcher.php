@@ -27,6 +27,7 @@ class APIFetcher implements HNClient
         $idList = json_decode($res->getContent());
         Log::debug("retrieved id list for topstories.json");
         // fetch only first 30 entries (equivalent of fetching the first html page);
+        // in practice the first 30 rows always contain an ad or a job post, so we get 29 "entries" parsed
         foreach (array_slice($idList, 0, 30) as $id) {
             Log::debug("fetching json data for {$id}");
             $res = json_decode($client->request('GET', $baseURL . 'item/' . $id . '.json')->getContent());

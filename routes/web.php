@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,3 +17,7 @@ use Illuminate\Support\Facades\Route;
 Auth::routes();
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+// post related routes
+Route::get('/posts/{id}', [App\Http\Controllers\PostController::class, 'show'])->middleware('auth');
+Route::delete('/posts/{id}', [App\Http\Controllers\PostController::class, 'delete'])->middleware('auth');

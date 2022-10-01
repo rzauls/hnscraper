@@ -5339,6 +5339,9 @@ var dt = __webpack_require__(/*! datatables.net */ "./node_modules/datatables.ne
     });
     this.table = new dt('#data-table', {
       data: this.postArray,
+      language: {
+        emptyTable: "No entries have been fetched, try running `artisan fetch:posts` command in your console"
+      },
       columns: [{
         title: 'Title',
         data: 'title',
@@ -5368,10 +5371,9 @@ var dt = __webpack_require__(/*! datatables.net */ "./node_modules/datatables.ne
         title: 'Actions',
         data: 'id',
         render: function render(data, type, row) {
-          // render a clickable delete button
+          // im pretty sure there is a better way to delete a specific item, however let's keep it simple
           if (type === 'display') {
-            // TODO: post a delete with confirmation on click
-            return "<a href=\"/delete/" + data + "\">Delete</a>";
+            return "\n                                <form id=\"delete-" + data + "\" action=\"/posts/" + data + "\" method=\"POST\" style=\"display: none;\">\n                                    <input type=\"hidden\" name=\"_token\" value=\"" + document.querySelector('meta[name="csrf-token"]').getAttribute('content') + "\">\n                                    <input type=\"hidden\" name=\"_method\" value=\"delete\">\n                                </form>\n                                <button class=\"delete-item-button\" form=\"delete-" + data + "\">Delete</button>\n                            ";
           }
 
           return data;
