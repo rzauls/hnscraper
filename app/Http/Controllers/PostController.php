@@ -24,7 +24,7 @@ class PostController extends Controller
     public function delete($id)
     {
         if (Post::findOrFail($id)->delete()) {
-            return view('home', ['posts' => Post::all()]);
+            return redirect()->route('home');
         }
         return response([], 404);
     }
