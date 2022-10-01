@@ -18,7 +18,7 @@ class PostController extends Controller
 
     public function show($id)
     {
-        return response(Post::findOrFail($id));
+        return response(Post::withTrashed()->findOrFail($id));
     }
 
     public function delete($id)

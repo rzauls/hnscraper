@@ -18,7 +18,6 @@ class Post extends Model
     use SoftDeletes;
 
     protected $guarded = []; // all fields are mass-writable
-    public $timestamps = false; // we manage timestamps manually
     protected $primaryKey = 'id';
 
 }
