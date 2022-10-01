@@ -9,7 +9,6 @@ class FetchController extends Controller
 {
     public function GetPosts(HNClient $client): Collection
     {
-        // TODO: check if post already imported and do not update if its soft-deleted
         return $client->fetch();
     }
 }

@@ -71,7 +71,7 @@ class FetchPosts extends Command
                     $postRecord->link = $p->link;
                     $postRecord->save();
                 } else {
-                    $this->info("skipping a trashed post with id " . $p->id);
+                    $this->info("skipping a trashed post with id " . $p->id, 'v');
                 }
             } else {
                 $p->save();
@@ -81,6 +81,6 @@ class FetchPosts extends Command
 
         $successMsg = "successfully imported {$posts->count()} data points from '{$source}' data source";
         Log::info($successMsg);
-        $this->info($successMsg);
+        $this->info($successMsg, 'normal');
     }
 }
