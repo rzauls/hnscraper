@@ -12,10 +12,9 @@ use Tests\TestCase;
 
 class FetchPostsTest extends TestCase
 {
-    use DatabaseTransactions;
 
     // do not persist mock post data
-    protected $testPostData;
+    use DatabaseTransactions;
 
     protected function generateFakePosts($i = 5)
     {
@@ -55,12 +54,14 @@ class FetchPostsTest extends TestCase
 
     public function test_command_doesnt_update_deleted_posts()
     {
-        $fakePosts = $this->generateFakePosts(1);
-        $deletedPost = $fakePosts->first();
+        $fakePosts = $this->generateFakePosts(5);
+        $deletedPost = Post::factory()->create();
         $deletedPost->points = 123; // update points to some known value
         $deletedPost->save();
         $deletedPost->delete();
+        $deletedPost->points = 321; // set "fetched" post back to a different value
         $deletedPostID = $deletedPost->id;
+        $fakePosts->add($deletedPost);
 
         $this->instance(
             HNClient::class,
@@ -73,7 +74,11 @@ class FetchPostsTest extends TestCase
 
         $this->assertDatabaseHas('posts', [
             'id' => $deletedPostID,
-            'points' =>  123, // assert that a row with 123 points exists (row was not updated since it was soft-deleted)
+            'points' => 123, // assert that a row with 123 points exists (row was not updated since it was soft-deleted)
+        ]);
+        $this->assertDatabaseMissing('posts', [
+            'id' => $deletedPostID,
+            'points' => 321, // assert that the updated row did not get persisted
         ]);
     }
 }
