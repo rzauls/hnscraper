@@ -15,7 +15,7 @@ use Symfony\Component\HttpClient\HttpClient;
  */
 class APIFetcher implements HNClient
 {
-    public function fetch(): Collection
+    public function GetPosts(): Collection
     {
         $baseURL = env('TARGET_API_URL', 'https://hacker-news.firebaseio.com/v0/');
 

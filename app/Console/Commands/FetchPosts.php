@@ -5,14 +5,10 @@ namespace App\Console\Commands;
 use App\HN\APIFetcher;
 use App\HN\HTMLFetcher;
 use App\Http\Controllers\FetchController;
+use App\Interfaces\HNClient;
 use App\Models\Post;
-use Carbon\Carbon;
-use Goutte\Client;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use RuntimeException;
-use Symfony\Component\DomCrawler\Crawler;
-use Symfony\Component\HttpClient\HttpClient;
 
 class FetchPosts extends Command
 {
@@ -30,6 +26,9 @@ class FetchPosts extends Command
      */
     protected $description = 'Fetches HackerNews posts and saves the data to storage.';
 
+
+    protected $hnClient;
+
     /**
      * Create a new command instance.
      *
@@ -37,28 +36,18 @@ class FetchPosts extends Command
      */
     public function __construct()
     {
+        $this->hnClient = app(HNClient::class);
         parent::__construct();
     }
 
     /**
      * Execute the console command.
      *
-     * @throws RuntimeException // in case the HN structure has changed or the parsed an item list is empty
-     * @return array
+     * @return int
      */
-    public function handle(): void
+    public function handle(): int
     {
-        $hn = new FetchController();
-        $source = env("HN_DATA_SOURCE", "html");
-        switch ($source) {
-            case 'api':
-                $client = new APIFetcher();
-                break;
-            default:
-                $client = new HTMLFetcher();
-        }
-
-        $posts = $hn->GetPosts($client);
+        $posts = $this->hnClient->GetPosts();
 
         $posts->each(function (Post $p) {
             $postRecord = Post::withTrashed()->where('id', '=', $p->id)->first();
@@ -79,8 +68,10 @@ class FetchPosts extends Command
         }
         );
 
+        $source = config('hn.default');
         $successMsg = "successfully imported {$posts->count()} data points from '{$source}' data source";
         Log::info($successMsg);
         $this->info($successMsg, 'normal');
+        return 0;
     }
 }

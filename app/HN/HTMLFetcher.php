@@ -17,7 +17,7 @@ use Symfony\Component\HttpClient\HttpClient;
 
 class HTMLFetcher implements HNClient
 {
-    public function fetch(): Collection
+    public function GetPosts(): Collection
     {
         $client = new Client(HttpClient::create(['timeout' => env('FETCH_TIMEOUT', 10)]));
         $crawler = $client->request('GET', env('TARGET_URL', 'https://news.ycombinator.com/'));
