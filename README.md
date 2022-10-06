@@ -1,64 +1,71 @@
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
 
 <p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## About Laravel
+## Laravel 8 & Vue HN Scraper
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+A simple html scraper for HN top posts.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Installation
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Requirements:
 
-## Learning Laravel
+ - PHP 7.3 or higher
+ - working `composer` installation
+ - working `docker` and `docker compose` installation (optional, but highly recommended)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+If you are on a system that supports `docker`, use Laravel's Sail that comes with default laravel 8 distribution. Sail is a pre-configured 
+`docker` and `docker compose` setup optimized for ease of use.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Run application locally
 
-## Laravel Sponsors
+ - `composer install` in project directory
+ - `cp .env.example .env`  copy the environment configuration example and modify as needed
+ - `./vendor/bin/sail up` run project containers in docker (add `-d` flag to run containers in background)
+ - `./vendor/bin/sail artisan migrate` initialize database schema
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+At this point application should be accessible in your `localhost` address on port 80.
 
-### Premium Partners
+To fetch the newest post data:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+- `./vendor/bin/sail artisan fetch::posts` retrieves latest post data from HN using the configured data source.
+     There are 2 available data sources, that can be chosen from in the .env configuration file under `HN_DATA_SOURCE`.
+     `html` data source fetches the news.ycombinator.com page and scrapes the data from the html document itself, `api` source 
+     uses HN's firebase API to retrieve top 30 posts. `api` source was implemented in case the HN front page html structure changes.
+    This command is meant to be run on a repeated schedule, for example a cron-job that runs every x hours.
 
-## Contributing
+To view saved post data:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- Open the running application at `localhost` or wherever your application is running
+- Create a new user using the `Register` button
+- Log in with the newly created user
+- You can now access the scraped data in the application homepage
 
-## Code of Conduct
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Application deployment
 
-## Security Vulnerabilities
+Since this is a quite standard Laravel 8, project, please refer to [Laravel's official documentation](https://laravel.com/docs/8.x/deployment) for various options
+for deploying this application on a real-world environment 
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Automated testing
 
-## License
+While using docker-based Laravel Sail, running tests is quite simple:
+
+- `./vendor/bin/sail test` to run all defined tests.
+
+Automated tests do not impact the 'live' database state, and do not call any external HN sources.
+
+## Disclaimer
+
+This is an educational side-project, does not represent HackerNews or Ycombinator in any capacity.
+
+## Licensing
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+The Vue framework is open-sourced software licensed under the [MIT license](https://github.com/vuejs/vue/blob/main/LICENSE).
+
+The DataTables Plugin is open-sourced software licenced under the [MIT license](https://datatables.net/license/)
