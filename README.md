@@ -22,9 +22,11 @@ If you are on a system that supports `docker`, use Laravel's Sail that comes wit
 
 ### Run application locally
 
- - `composer install` in project directory
+ - `composer update && composer install` in project directory
  - `cp .env.example .env`  copy the environment configuration example and modify as needed
  - `./vendor/bin/sail up` run project containers in docker (add `-d` flag to run containers in background)
+ - `./vendor/bin/sail artisan sail:install` modifies the .env file so the sail-managed containers and associated env values are valid (optional step, in case `artisan migrate` returns connection errors)
+ - `./vendor/bin/sail artisan key:generate` generate a unique app-key
  - `./vendor/bin/sail artisan migrate` initialize database schema
 
 At this point application should be accessible in your `localhost` address on port 80.
