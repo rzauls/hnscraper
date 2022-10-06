@@ -31,7 +31,7 @@ At this point application should be accessible in your `localhost` address on po
 
 To fetch the newest post data:
 
-- `./vendor/bin/sail artisan fetch::posts` retrieves latest post data from HN using the configured data source.
+- `./vendor/bin/sail artisan fetch:posts` retrieves latest post data from HN using the configured data source.
      There are 2 available data sources, that can be chosen from in the .env configuration file under `HN_DATA_SOURCE`.
      `html` data source fetches the news.ycombinator.com page and scrapes the data from the html document itself, `api` source 
      uses HN's firebase API to retrieve top 30 posts. `api` source was implemented in case the HN front page html structure changes.
